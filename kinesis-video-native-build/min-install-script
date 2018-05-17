@@ -25,6 +25,14 @@ if [ ! -d "$DOWNLOADS" ]; then
     mkdir "$DOWNLOADS"
 fi
 
+export CC=~/toolchain/cross-compile-tools/arm-rpi-zero-linux-gnueabihf/bin/arm-linux-gnueabihf-gcc
+export CXX=~/toolchain/cross-compile-tools/arm-rpi-zero-linux-gnueabihf/bin/arm-linux-gnueabihf-g++
+
+export TARGETMACH=arm-rpi-linux-gnueabi
+export CROSS=arm-rpi-linux-gnueabi
+
+export CMAKE_SYSROOT=/mnt/rasp-pi-rootfs
+
 export PATH="$KINESIS_VIDEO_ROOT/downloads/local/bin:$PATH"
 export CMAKE_PREFIX_PATH="$DOWNLOADS/local"
 
@@ -43,7 +51,7 @@ if [ ! -f $DOWNLOADS/local/lib/liblog4cplus.dylib ]; then
     cd $DOWNLOADS
     tar -xvf log4cplus-1.2.0.tar.xz
     cd $DOWNLOADS/log4cplus-1.2.0
-    ./configure --prefix=$DOWNLOADS/local/ --with-pic
+    ./configure --prefix=$DOWNLOADS/local/ --host=arm-rpi-linux-gnueabihf --with-pic
     make
     make install
   fi
@@ -67,6 +75,39 @@ if [ ! -f $DOWNLOADS/local/lib/libgtest.dylib ]; then
     cp ./lib* $DOWNLOADS/local/lib
   fi
 fi
+
+#--------- build + install libs ---------
+echo "Checking openssl at $DOWNLOADS/local/lib/libssl.a"
+if [ ! -f $DOWNLOADS/local/lib/libssl.a ]; then
+  echo "openssl lib not found. Installing"
+  if [ ! -f $DOWNLOADS/openssl-1.1.0f.tar.gz ]; then
+    cd $DOWNLOADS
+    curl -L "https://www.openssl.org/source/openssl-1.1.0f.tar.gz" -o "openssl-1.1.0f.tar.gz"
+  fi
+  cd $DOWNLOADS
+  tar -xvf openssl-1.1.0f.tar.gz
+  cd $DOWNLOADS/openssl-1.1.0f
+  ./Configure linux-generic32 shared --prefix=$DOWNLOADS/local/ --openssldir=$DOWNLOADS/local/
+  make
+  make install
+fi
+
+
+echo "Checking curl at $DOWNLOADS/local/lib/libcurl.a"
+if [ ! -f $DOWNLOADS/local/lib/libcurl.a ]; then
+  echo "Curl lib not found. Installing"
+  if [ ! -f $DOWNLOADS/curl-7.57.0.tar.xz ]; then
+    cd $DOWNLOADS
+    curl -L "https://curl.haxx.se/download/curl-7.57.0.tar.xz" -o "curl-7.57.0.tar.xz"
+  fi
+  cd $DOWNLOADS
+  tar -xvf curl-7.57.0.tar.xz
+  cd $DOWNLOADS/curl-7.57.0
+  ./configure --prefix=$DOWNLOADS/local/ --host=arm-rpi-linux-gnueabihf --enable-dynamic --disable-rtsp --disable-ldap --without-zlib --with-ssl=$DOWNLOADS/local/ --with-ca-bundle=/etc/ssl/cert.pem
+  make
+  make install
+fi
+
 
 ## --------- build kinesis video ---------
 cd $KINESIS_VIDEO_ROOT

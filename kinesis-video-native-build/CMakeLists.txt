@@ -58,6 +58,8 @@ STRING(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 
+set(CMAKE_SYSROOT /mnt/rasp-pi-rootfs)
+
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ldl -lrt -lpthread")
 endif()
@@ -268,17 +270,23 @@ include_directories(/System/Library/Frameworks/JavaVM.framework/Versions/Current
 include_directories(${JAVA_HOME}/include)
 include_directories(${JAVA_HOME}/include/${CMAKE_SYSTEM_NAME_LOWER_CASE})
 
+include_directories(/mnt/rasp-pi-rootfs/usr/include/glib-2.0)
+include_directories(/mnt/rasp-pi-rootfs/usr/lib/arm-linux-gnueabihf/glib-2.0/include/)
+
+set(GST_INCLUDE_DIRS /mnt/rasp-pi-rootfs/usr/include/gstreamer-1.0)
+
 link_directories(${KINESIS_VIDEO_OPEN_SOURCE_SRC}/local/lib)
+link_libraries("-L=/usr/lib/arm-linux-gnueabihf")
 add_library(producer SHARED ${PRODUCER_SOURCE_FILES})
-add_library(KinesisVideoProducerJNI SHARED ${PRODUCER_SOURCE_FILES_JNI} ${PIC_SOURCE_FILES})
-add_executable(start ${TST_PRODUCER_SOURCE_FILES})
+#add_library(KinesisVideoProducerJNI SHARED ${PRODUCER_SOURCE_FILES_JNI} ${PIC_SOURCE_FILES})
+#add_executable(start ${TST_PRODUCER_SOURCE_FILES})
 add_executable(kinesis_video_gstreamer_sample_app ${GST_DEMO_APP})
-add_executable(kinesis_video_gstreamer_sample_rtsp_app ${RTSP_DEMO_APP})
+#add_executable(kinesis_video_gstreamer_sample_rtsp_app ${RTSP_DEMO_APP})
 
 target_include_directories(kinesis_video_gstreamer_sample_app PRIVATE ${GST_INCLUDE_DIRS})
-target_include_directories(kinesis_video_gstreamer_sample_rtsp_app PRIVATE ${GST_INCLUDE_DIRS})
+#target_include_directories(kinesis_video_gstreamer_sample_rtsp_app PRIVATE ${GST_INCLUDE_DIRS})
 
-target_link_libraries(KinesisVideoProducerJNI)
+#target_link_libraries(KinesisVideoProducerJNI)
 
 target_link_libraries(producer
         log4cplus
@@ -288,10 +296,10 @@ target_link_libraries(producer
         gtest_main
         curl)
 
-target_link_libraries(start
-        producer
-        pthread)
-
+#target_link_libraries(start
+#        producer
+#        pthread)
+#
 target_link_libraries(kinesis_video_gstreamer_sample_app
         producer
         pthread
@@ -299,14 +307,18 @@ target_link_libraries(kinesis_video_gstreamer_sample_app
         gstreamer-1.0
         gstapp-1.0
         gobject-2.0
-        glib-2.0)
+        glib-2.0
+        pcre 
+        ffi 
+        gstbase-1.0
+       	gmodule-2.0)
 
-target_link_libraries(kinesis_video_gstreamer_sample_rtsp_app
-        producer
-        pthread
-        dl
-        gstreamer-1.0
-        gstapp-1.0
-        gobject-2.0
-        glib-2.0)
-
+#target_link_libraries(kinesis_video_gstreamer_sample_rtsp_app
+#        producer
+#        pthread
+#        dl
+#        gstreamer-1.0
+#        gstapp-1.0
+#        gobject-2.0
+#        glib-2.0)
+#
